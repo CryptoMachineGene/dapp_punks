@@ -85,6 +85,11 @@ describe('NFT', () => {
           expect(await nft.balanceOf(minter.address)).to.equal(1)
         })
 
+        it('returns IPFS URI', async () => {
+          // EG: 'ipfs://QmQ2jnDYecFhrf3asEWjyjZRX1pZSsNWG3qHzmNDvXa9qg/1.json'
+          // console.log(await nft.tokenURI(1))
+          expect(await nft.tokenURI(1)).to.equal(`${BASE_URI}1.json`)
+        })
 
         it('updates the total supply', async () => {
           expect(await nft.totalSupply()).to.equal(1)
@@ -135,11 +140,42 @@ describe('NFT', () => {
           await expect(nft.connect(minter).mint(100, { value: COST })).to.be.reverted          
         })
 
+        it('does not return URIs for invalid tokens', async () => {
+          const ALLOW_MINTING_ON = Date.now().toString().slice(0, 10) // now
+          const NFT = await ethers.getContractFactory('NFT')
+          nft = await NFT.deploy(NAME, SYMBOL, COST, MAX_SUPPLY, ALLOW_MINTING_ON, BASE_URI)
+          nft.connect(minter).mint(1, { value: COST })
+          
+          await expect(nft.tokenURI('99')).to.be.reverted          
+        })
+
     })
 
+  })
 
+    describe('Displaying NFTs', () => {    
+      let transaction, result
 
-    
+      const ALLOW_MINTING_ON = Date.now().toString().slice(0, 10) // now
+
+      beforeEach(async () => {
+        const NFT = await ethers.getContractFactory('NFT')
+        nft = await NFT.deploy(NAME, SYMBOL, COST, MAX_SUPPLY, ALLOW_MINTING_ON, BASE_URI)
+
+        // Mint 3 NFTs
+        transaction = await nft.connect(minter).mint(3, { value: ether(30)})
+        result = await transaction.wait()
+      })
+
+      it('returns all the NFTs for a given owner', async () => {
+        let tokenIds = await nft.walletOfOwner(minter.address)
+        // Uncomment this line to see the return value
+        // console.log("owner wallet", wallet);
+        expect(tokenIds.length).to.equal(3)
+        expect(tokenIds[0].toString()).to.equal('1')
+        expect(tokenIds[1].toString()).to.equal('2')
+        expect(tokenIds[2].toString()).to.equal('3')
+      })
 
   })
 
