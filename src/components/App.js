@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Container } from 'react-bootstrap'
+import { Container, Row, Col } from 'react-bootstrap'
+import Countdown from 'react-countdown'
 import { ethers } from 'ethers'
+
+// IMG
+import preview from '../preview.png';
 
 // Components
 import Navigation from './Navigation';
+import Data from './Data';
 import Loading from './Loading';
 
 // ABIs: Import your contract ABIs here
@@ -18,7 +23,15 @@ function App() {
 
   const [account, setAccount] = useState(null)
   
+  const [revealTime, setRevealTime] = useState(0)
+  const [maxSupply, setMaxSupply] = useState(0)
+  const [totalSupply, setTotalSupply] = useState(0)
+  const [cost, setCost] = useState(0)
+  const [balance, setBalance] = useState(0)
+
   const [isLoading, setIsLoading] = useState(true)
+
+  
 
   const loadBlockchainData = async () => {
     // Initiate provider
@@ -34,6 +47,22 @@ function App() {
     const account = ethers.utils.getAddress(accounts[0])
     setAccount(account)
    
+    // Fetch Countdown
+    const allowMintingOn = await nft.allowMintingOn()
+    setRevealTime(allowMintingOn.toString() + '000')
+
+    // Fetch maxSupply 
+    setMaxSupply(await nft.maxSupply())
+
+    // Fetch totalSupply
+    setTotalSupply(await nft.totalSupply())
+
+    // Fetch cost
+    setCost(await nft.cost())
+
+    // Fetch account balance
+    setBalance(await nft.balanceOf(account))
+
     setIsLoading(false)
   }
 
@@ -47,13 +76,31 @@ function App() {
     <Container>
       <Navigation account={account} />
 
-      <h1 className='my-4 text-center'>React Hardhat Template</h1>
+      <h1 className='my-4 text-center'>Dapp Punks</h1>
 
       {isLoading ? (
         <Loading />
       ) : (
         <>
-          <p className='text-center'>Edit App.js to add your code here.</p>
+          <Row>
+            <Col>
+              <img src={preview} alt="" />
+            </Col>
+
+            <Col>
+              <div className='my-4 text-center'>
+                <Countdown date={parseInt(revealTime)} className='h2' />
+              </div>
+
+              <Data 
+              maxSupply={maxSupply}
+              totalSupply={totalSupply}
+              cost={cost}
+              balance={balance} 
+              />
+            </Col>
+
+          </Row>
         </>
       )}
     </Container>
