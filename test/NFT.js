@@ -222,7 +222,6 @@ describe('NFT', () => {
           
           await expect(nft.connect(minter).withdraw()).to.be.reverted          
         })
-    })
+      })
   })
-
 })
